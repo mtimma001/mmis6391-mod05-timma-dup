@@ -6,8 +6,8 @@ app = create_app()
 app.secret_key = 'my-secret'
 
 # Register Blueprints
-
-
+from app.blueprints.movies import movies
+app.register_blueprint(movies)
 
 from . import routes
 

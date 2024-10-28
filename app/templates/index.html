@@ -4,9 +4,9 @@
 
 {% block content %}
     <div class="text-center">
-        <h1>Welcome to the Movie Database</h1>
+        <h1>Welcome to the Movies Galore</h1>
         <p class="lead">Manage your movie collection and explore genres with ease!</p>
-        <a href="/movies" class="btn btn-primary">View Movies</a>
-        <a href="/genres" class="btn btn-secondary">View Genres</a>
+        <a href="{{ url_for('movies.movie') }}" class="btn btn-primary">View Movies</a>
+        <a href="{{ url_for('movies.genre') }}" class="btn btn-secondary">View Genres</a>
     </div>
 {% endblock %}

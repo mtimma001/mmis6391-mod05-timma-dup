@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Genres</h2>
+<!-- Form to add a new genre -->
+<form action="{{ url_for('movies.genre') }}" class="row g-3 align-items-center mb-4" method="POST">
+    <div class="col-auto">
+        <input class="form-control" name="genre_name" placeholder="Genre Name" required type="text">
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-primary" type="submit">Add Genre</button>
+    </div>
+</form>
+
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Genre Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for genre in all_genres %}
+        <tr>
+            <td>{{ genre.genre_name }}</td>
+            <td>
+                <a href="{{ url_for('movies.update_genre', genre_id=genre.genre_id) }}" class="btn btn-sm btn-warning">Edit</a>
+                <form action="{{ url_for('movies.delete_genre', genre_id=genre.genre_id) }}" method="POST" style="display:inline-block;">
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
