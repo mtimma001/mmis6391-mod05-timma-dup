@@ -2,35 +2,28 @@
 
 {% block content %}
 <h2>Movies</h2>
-<!-- Form to add a new movie -->
-<form action="{{ url_for('movies.movie') }}" class="row g-3 align-items-center mb-4" method="POST">
-    <div class="col-auto">
-        <input class="form-control" name="title" placeholder="Movie Title" required type="text">
-    </div>
-    <div class="col-auto">
-        <input class="form-control" name="release_year" placeholder="Release Year" required type="number" min="1888" max="{{ current_year }}">
-    </div>
-    <div class="col-auto">
-        <div class="btn-group">
-            <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                Select Genres
-            </button>
-            <ul class="dropdown-menu">
-                {% for genre in all_genres %}
-                    <li class="ps-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="genres" value="{{ genre.genre_id }}" id="genre{{ genre.genre_id }}">
-                            <label class="form-check-label" for="genre{{ genre.genre_id }}">
-                                {{ genre.genre_name }}
-                            </label>
-                        </div>
-                    </li>
-                {% endfor %}
-            </ul>
+<!-- Form to filter movies -->
+<form method="POST" action="{{ url_for('movies.movie') }}">
+    <input type="hidden" name="form_type" value="filter_movie">
+    <div class="row g-3 mb-4">
+        <div class="col-auto">
+            <input class="form-control" type="text" name="title_filter" placeholder="Search by Title">
         </div>
-    </div>
-    <div class="col-auto">
-        <button class="btn btn-primary" type="submit">Add Movie</button>
+        <div class="col-auto">
+            <input class="form-control" type="number" name="release_year_filter" placeholder="Search by Year" min="1888" max="2050">
+        </div>
+        <div class="col-auto">
+            <select class="form-select" name="genre_filter">
+                <option value="">Select Genre</option>
+                {% for genre in all_genres %}
+                    <option value="{{ genre.genre_id }}">{{ genre.genre_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-outline-primary" type="submit">Filter</button>
+            <a href="{{ url_for('movies.movie') }}" class="btn btn-outline-danger" role="button">Reset</a>
+        </div>
     </div>
 </form>
 
@@ -61,4 +54,38 @@
         {% endfor %}
     </tbody>
 </table>
+
+<!-- Form to add a new movie -->
+<h3>Add Movies</h3>
+<form action="{{ url_for('movies.movie') }}" class="row g-3 align-items-center mb-4" method="POST">
+    <input type="hidden" name="form_type" value="add_movie">
+    <div class="col-auto">
+        <input class="form-control" name="title" placeholder="Movie Title" required type="text">
+    </div>
+    <div class="col-auto">
+        <input class="form-control" name="release_year" placeholder="Release Year" required type="number" min="1888" max="2050">
+    </div>
+    <div class="col-auto">
+        <div class="btn-group">
+            <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                Select Genres
+            </button>
+            <ul class="dropdown-menu">
+                {% for genre in all_genres %}
+                    <li class="ps-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="genres" value="{{ genre.genre_id }}" id="genre{{ genre.genre_id }}">
+                            <label class="form-check-label" for="genre{{ genre.genre_id }}">
+                                {{ genre.genre_name }}
+                            </label>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-primary" type="submit">Add Movie</button>
+    </div>
+</form>
 {% endblock %}

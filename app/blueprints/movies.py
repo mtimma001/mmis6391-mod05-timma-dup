@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, url_for, redirect, flash
 from app.db_connect import get_db
+from app.functions import filter_movies_by_genre, filter_movies_by_title, filter_movies_by_year
 
 movies = Blueprint('movies', __name__)
 
@@ -10,39 +11,75 @@ def movie():
     db = get_db()
     cursor = db.cursor()
 
+    # Initialize variable to hold all movies, genres
+    all_movies = []
+    all_genres = []
+
     # Handle POST request to add a new movie
     if request.method == 'POST':
-        title = request.form['title']
-        release_year = request.form['release_year']
-        movie_genres = request.form.getlist('genres')  # Get a list of movie genres
+        form_type = request.form.get('form_type')
 
-        # Fetch all genre IDs from the database
-        cursor.execute('SELECT genre_id FROM genres')
-        fetched_genres = cursor.fetchall()
-        valid_genres = [str(fetched_genre['genre_id']) for fetched_genre in fetched_genres]
+        if form_type == 'filter_movie':
+            title_filter = request.form['title_filter']
+            release_year_filter = request.form['release_year_filter']
+            movie_genres_filter = request.form['genre_filter']
 
-        # Debugging output: print movie genres and valid genres
-        print(f"Selected genres from form: {movie_genres}")
-        print(f"Valid genres from database: {valid_genres}")
-
-        # Insert the new movie into the database
-        cursor.execute('INSERT INTO movies (title, release_year) VALUES (%s, %s)', (title, release_year))
-        movie_id = cursor.lastrowid  # Get the ID of the last inserted movie
-
-        # Insert the genres into the movie_genres table
-        for movie_genre in movie_genres:
-            if movie_genre in valid_genres:  # Check if the genre is valid
-                cursor.execute('INSERT INTO movie_genres (movie_id, genre_id) VALUES (%s, %s)', (movie_id, movie_genre))
+            if title_filter:
+                all_movies = filter_movies_by_title(title_filter)
+            elif release_year_filter:
+                all_movies = filter_movies_by_year(release_year_filter)
+            elif movie_genres_filter:
+                all_movies = filter_movies_by_genre(movie_genres_filter)
             else:
-                flash(f"Invalid genre ID: {movie_genre}", 'danger')
-                db.rollback()  # Roll back the transaction if an invalid genre is detected
-                print(f"Invalid genre ID: {movie_genre}")  # Debug message for invalid genres
-                return redirect(url_for('movies.movie'))
+                # Handle GET request to display all movies
+                cursor.execute('''
+                    SELECT m.movie_id, m.title, m.release_year, GROUP_CONCAT(g.genre_name) AS genres
+                    FROM movies m
+                    LEFT JOIN movie_genres mg ON m.movie_id = mg.movie_id
+                    LEFT JOIN genres g ON mg.genre_id = g.genre_id
+                    GROUP BY m.movie_id
+                    ''')
+                all_movies = cursor.fetchall()
 
-        db.commit()
+                # Get all genres
+                cursor.execute('SELECT * FROM genres')
+                all_genres = cursor.fetchall()
 
-        flash('New movie added successfully!', 'success')
-        return redirect(url_for('movies.movie'))
+            return render_template('movies.html', all_movies=all_movies, all_genres=all_genres)
+
+        elif form_type == 'add_movie':
+            title = request.form['title']
+            release_year = request.form['release_year']
+            movie_genres = request.form.getlist('genres')  # Get a list of movie genres
+
+            # Fetch all genre IDs from the database
+            cursor.execute('SELECT genre_id FROM genres')
+            fetched_genres = cursor.fetchall()
+            valid_genres = [str(fetched_genre['genre_id']) for fetched_genre in fetched_genres]
+
+            # Debugging output: print movie genres and valid genres
+            print(f"Selected genres from form: {movie_genres}")
+            print(f"Valid genres from database: {valid_genres}")
+
+            # Insert the new movie into the database
+            cursor.execute('INSERT INTO movies (title, release_year) VALUES (%s, %s)', (title, release_year))
+            movie_id = cursor.lastrowid  # Get the ID of the last inserted movie
+
+            # Insert the genres into the movie_genres table
+            for movie_genre in movie_genres:
+                if movie_genre in valid_genres:  # Check if the genre is valid
+                    cursor.execute('INSERT INTO movie_genres (movie_id, genre_id) VALUES (%s, %s)',
+                                   (movie_id, movie_genre))
+                else:
+                    flash(f"Invalid genre ID: {movie_genre}", 'danger')
+                    db.rollback()  # Roll back the transaction if an invalid genre is detected
+                    print(f"Invalid genre ID: {movie_genre}")  # Debug message for invalid genres
+                    return redirect(url_for('movies.movie'))
+
+            db.commit()
+
+            flash('New movie added successfully!', 'success')
+            return redirect(url_for('movies.movie'))
 
     # Handle GET request to display all movies
     cursor.execute('''
